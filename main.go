@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/mpja69/chirpy/internal/database"
 )
 
 type apiConfig struct {
@@ -55,12 +57,15 @@ func main() {
 		w.Write([]byte(http.StatusText(http.StatusOK)))
 
 	})
-
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
-
 	mux.HandleFunc("/api/reset", apiCfg.handlerReset)
 
-	mux.HandleFunc("POST /api/validate_chirp", handlerValidate)
+	db, err := database.NewDB("database.json")
+	if err != nil {
+		log.Fatal("Couldn't create database")
+	}
+	fdb := FileDB{db: db}
+	mux.HandleFunc("POST /api/chirps", fdb.handlePostChirps)
 
 	srv := &http.Server{
 		Handler: mux,
@@ -72,12 +77,17 @@ func main() {
 
 }
 
-func handlerValidate(w http.ResponseWriter, r *http.Request) {
+type FileDB struct {
+	db *database.DB
+}
+
+func (db *FileDB) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body string `json:"body"`
 	}
 	type returnVals struct {
-		CleanedBody string `json:"cleaned_body"`
+		Id   int    `json:"id"`
+		Body string `json:"body"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -99,9 +109,13 @@ func handlerValidate(w http.ResponseWriter, r *http.Request) {
 		"fornax":    {},
 	}
 	cleanedMsg := cleanBody(params.Body, profaneWords)
-	sendJsonResponse(w, http.StatusOK, returnVals{
-		CleanedBody: cleanedMsg,
-	})
+
+	chirp, err := db.db.CreateChirp(cleanedMsg)
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, "Could not create chirp")
+		return
+	}
+	sendJsonResponse(w, http.StatusCreated, chirp)
 }
 
 func cleanBody(msg string, badWords map[string]struct{}) string {
