@@ -38,10 +38,10 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	}
 
 	chirp := Chirp{
-		Id:   len(dbs.Chirps),
+		Id:   len(dbs.Chirps) + 1,
 		Body: body,
 	}
-	dbs.Chirps[len(dbs.Chirps)] = chirp
+	dbs.Chirps[len(dbs.Chirps)+1] = chirp
 
 	db.writeDB(dbs)
 	return chirp, nil

@@ -44,8 +44,6 @@ func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 func main() {
 	fileRoot := "."
 	port := "8080"
-	// Add a handler for files, starting in root
-	// mux.Handle("/app/", http.StripPrefix("/app/", http.FileServer(http.Dir(fileRoot))))
 	apiCfg := apiConfig{}
 	mux := http.NewServeMux()
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(fileRoot)))))
@@ -66,6 +64,7 @@ func main() {
 	}
 	fdb := FileDB{db: db}
 	mux.HandleFunc("POST /api/chirps", fdb.handlePostChirps)
+	mux.HandleFunc("GET /api/chirps", fdb.handleGetChirps)
 
 	srv := &http.Server{
 		Handler: mux,
@@ -81,12 +80,17 @@ type FileDB struct {
 	db *database.DB
 }
 
-func (db *FileDB) handlePostChirps(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Body string `json:"body"`
+func (fdb *FileDB) handleGetChirps(w http.ResponseWriter, r *http.Request) {
+	chirps, err := fdb.db.GetChirps()
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, "Could not read chirps")
+		return
 	}
-	type returnVals struct {
-		Id   int    `json:"id"`
+	sendJsonResponse(w, http.StatusOK, chirps)
+}
+
+func (fdb *FileDB) handlePostChirps(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
 		Body string `json:"body"`
 	}
 
@@ -110,7 +114,7 @@ func (db *FileDB) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	}
 	cleanedMsg := cleanBody(params.Body, profaneWords)
 
-	chirp, err := db.db.CreateChirp(cleanedMsg)
+	chirp, err := fdb.db.CreateChirp(cleanedMsg)
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, "Could not create chirp")
 		return
