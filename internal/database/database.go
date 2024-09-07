@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"net/http"
 	"os"
 	"sync"
 )
@@ -14,20 +13,6 @@ type DB struct {
 	path string
 	mux  *sync.RWMutex
 }
-
-func (db *DB) WrapperHandlerFunc(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Do something...
-		next(w, r)
-		// TODO: Do something...
-	})
-}
-
-// func (db *DB) WrapperHandler(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
 
 // NewDB creates a new database connection
 // and creates the database file if it doesn't exist
@@ -141,3 +126,15 @@ type Chirp struct {
 	Id   int    `json:"id"`
 	Body string `json:"body"`
 }
+
+// func (db *DB) WrapperHandlerFunc(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		next(w, r)
+// 	})
+// }
+
+// func (db *DB) WrapperHandler(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		next.ServeHTTP(w, r)
+// 	})
+// }
