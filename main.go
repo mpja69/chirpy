@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type apiConfig struct {
@@ -76,7 +77,7 @@ func handlerValidate(w http.ResponseWriter, r *http.Request) {
 		Body string `json:"body"`
 	}
 	type returnVals struct {
-		Valid bool `json:"valid"`
+		CleanedBody string `json:"cleaned_body"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -92,10 +93,26 @@ func handlerValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Message is OK: %s", params.Body)
+	profaneWords := map[string]struct{}{
+		"kerfuffle": {},
+		"sharbert":  {},
+		"fornax":    {},
+	}
+	cleanedMsg := cleanBody(params.Body, profaneWords)
 	sendJsonResponse(w, http.StatusOK, returnVals{
-		Valid: true,
+		CleanedBody: cleanedMsg,
 	})
+}
+
+func cleanBody(msg string, badWords map[string]struct{}) string {
+	words := strings.Split(msg, " ")
+	for i, word := range words {
+		if _, ok := badWords[strings.ToLower(word)]; ok {
+			words[i] = "****"
+		}
+	}
+	cleanedMsg := strings.Join(words, " ")
+	return cleanedMsg
 }
 
 func sendErrorResponse(w http.ResponseWriter, code int, msg string) {
