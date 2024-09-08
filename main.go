@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/mpja69/chirpy/internal/database"
 )
@@ -13,10 +15,14 @@ type apiConfig struct {
 	db             *database.DB
 }
 
-// type FileDB struct {
-// }
-
 func main() {
+	dbg := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+
+	if *dbg {
+		os.Remove("database.json")
+	}
+
 	fileRoot := "."
 	port := "8080"
 	db, err := database.NewDB("database.json")
