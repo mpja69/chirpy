@@ -60,6 +60,18 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 	return chirps, nil
 }
 
+func (db *DB) GetChirp(id int) (Chirp, error) {
+	dbs, err := db.loadDB()
+	if err != nil {
+		return Chirp{}, err
+	}
+	chirp, ok := dbs.Chirps[id]
+	if ok {
+		return chirp, nil
+	}
+	return Chirp{}, fmt.Errorf("Id not in db")
+}
+
 // ensureDB creates a new database file if it doesn't exist
 func (db *DB) ensureDB() error {
 	_, err := os.Stat(db.path)

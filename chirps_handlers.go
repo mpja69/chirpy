@@ -1,8 +1,14 @@
 package main
 
-import "net/http"
-import "encoding/json"
-import "strings"
+import (
+	"encoding/json"
+	"net/http"
+	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/mpja69/chirpy/internal/database"
+)
 
 func (fdb *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 	chirps, err := fdb.db.GetChirps()
@@ -10,7 +16,33 @@ func (fdb *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(w, http.StatusInternalServerError, "Could not read chirps")
 		return
 	}
-	sendJsonResponse(w, http.StatusOK, chirps)
+	sortedChirps := []database.Chirp{}
+	for _, ch := range chirps {
+		sortedChirps = append(sortedChirps, database.Chirp{
+			Id:   ch.Id,
+			Body: ch.Body,
+		})
+	}
+	sort.Slice(sortedChirps, func(i int, j int) bool {
+		return sortedChirps[i].Id < sortedChirps[j].Id
+	})
+
+	sendJsonResponse(w, http.StatusOK, sortedChirps)
+}
+
+func (cfg *apiConfig) handleGetChirpById(w http.ResponseWriter, r *http.Request) {
+	idValue := r.PathValue("id")
+	id, err := strconv.Atoi(idValue)
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, "The requested id is malformed")
+		return
+	}
+	chirp, err := cfg.db.GetChirp(id)
+	if err != nil {
+		sendErrorResponse(w, http.StatusNotFound, "Chirp does not exist")
+		return
+	}
+	sendJsonResponse(w, http.StatusOK, chirp)
 }
 
 func (fdb *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
