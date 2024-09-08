@@ -3,7 +3,6 @@ package database
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"sync"
 )
@@ -25,53 +24,6 @@ func NewDB(path string) (*DB, error) {
 	return db, err
 }
 
-// CreateChirp creates a new chirp and saves it to disk
-func (db *DB) CreateChirp(body string) (Chirp, error) {
-	dbs, err := db.loadDB()
-	if err != nil {
-		return Chirp{}, err
-	}
-	id := len(dbs.Chirps) + 1
-	chirp := Chirp{
-		Id:   id,
-		Body: body,
-	}
-	dbs.Chirps[id] = chirp
-
-	err = db.writeDB(dbs)
-	if err != nil {
-		return Chirp{}, err
-	}
-
-	return chirp, nil
-}
-
-// GetChirps returns all chirps in the database
-func (db *DB) GetChirps() ([]Chirp, error) {
-	dbs, err := db.loadDB()
-	if err != nil {
-		return nil, fmt.Errorf("GetChirps: %v", err)
-	}
-
-	chirps := make([]Chirp, 0, len(dbs.Chirps))
-	for _, chirp := range dbs.Chirps {
-		chirps = append(chirps, chirp)
-	}
-	return chirps, nil
-}
-
-func (db *DB) GetChirp(id int) (Chirp, error) {
-	dbs, err := db.loadDB()
-	if err != nil {
-		return Chirp{}, err
-	}
-	chirp, ok := dbs.Chirps[id]
-	if ok {
-		return chirp, nil
-	}
-	return Chirp{}, fmt.Errorf("Id not in db")
-}
-
 // ensureDB creates a new database file if it doesn't exist
 func (db *DB) ensureDB() error {
 	_, err := os.Stat(db.path)
@@ -89,6 +41,7 @@ func (db *DB) ensureDB() error {
 func (db *DB) createDB() error {
 	dbs := DBStructure{
 		Chirps: map[int]Chirp{},
+		Users:  map[int]User{},
 	}
 	return db.writeDB(dbs)
 }
@@ -99,16 +52,18 @@ func (db *DB) loadDB() (DBStructure, error) {
 	defer db.mux.RUnlock()
 
 	dbs := DBStructure{}
+
 	data, err := os.ReadFile(db.path)
 	if errors.Is(err, os.ErrNotExist) {
-		return dbs, nil
+		return dbs, err
 	}
 
 	err = json.Unmarshal(data, &dbs)
 	if err != nil {
-		return dbs, fmt.Errorf("LoadDB: %v", err)
+		return dbs, err
 	}
 
+	dbs.mux = &sync.Mutex{}
 	return dbs, nil
 }
 
@@ -132,20 +87,40 @@ func (db *DB) writeDB(dbStructure DBStructure) error {
 
 type DBStructure struct {
 	Chirps map[int]Chirp `json:"chirps"`
+	Users  map[int]User  `json:"users"`
+	mux    *sync.Mutex
 }
 type Chirp struct {
 	Id   int    `json:"id"`
 	Body string `json:"body"`
 }
+type User struct {
+	Id    int    `json:"id"`
+	Email string `json:"email"`
+}
 
-// func (db *DB) WrapperHandlerFunc(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		next(w, r)
-// 	})
-// }
+func (dbs *DBStructure) GetUser(id int) (User, bool) {
+	dbs.mux.Lock()
+	defer dbs.mux.Unlock()
+	user, ok := dbs.Users[id]
+	return user, ok
+}
 
-// func (db *DB) WrapperHandler(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
+func (dbs *DBStructure) GetChirp(id int) (Chirp, bool) {
+	dbs.mux.Lock()
+	defer dbs.mux.Unlock()
+	chirp, ok := dbs.Chirps[id]
+	return chirp, ok
+}
+
+func (dbs *DBStructure) SetUser(id int, user User) {
+	dbs.mux.Lock()
+	defer dbs.mux.Unlock()
+	dbs.Users[id] = user
+}
+
+func (dbs *DBStructure) SetChirp(id int, chirp Chirp) {
+	dbs.mux.Lock()
+	defer dbs.mux.Unlock()
+	dbs.Chirps[id] = chirp
+}

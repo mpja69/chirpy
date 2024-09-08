@@ -13,7 +13,7 @@ import (
 func (fdb *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 	chirps, err := fdb.db.GetChirps()
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Could not read chirps")
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	sortedChirps := []database.Chirp{}
@@ -34,12 +34,12 @@ func (cfg *apiConfig) handleGetChirpById(w http.ResponseWriter, r *http.Request)
 	idValue := r.PathValue("chirpId")
 	id, err := strconv.Atoi(idValue)
 	if err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "The requested id is malformed")
+		sendErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	chirp, err := cfg.db.GetChirp(id)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Chirp does not exist")
+		sendErrorResponse(w, http.StatusNotFound, err.Error())
 		return
 	}
 	sendJsonResponse(w, http.StatusOK, chirp)
@@ -54,7 +54,7 @@ func (fdb *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -72,7 +72,7 @@ func (fdb *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 
 	chirp, err := fdb.db.CreateChirp(cleanedMsg)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Could not create chirp")
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	sendJsonResponse(w, http.StatusCreated, chirp)
