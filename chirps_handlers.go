@@ -31,10 +31,10 @@ func (fdb *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handleGetChirpById(w http.ResponseWriter, r *http.Request) {
-	idValue := r.PathValue("id")
+	idValue := r.PathValue("chirpId")
 	id, err := strconv.Atoi(idValue)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "The requested id is malformed")
+		sendErrorResponse(w, http.StatusBadRequest, "The requested id is malformed")
 		return
 	}
 	chirp, err := cfg.db.GetChirp(id)
