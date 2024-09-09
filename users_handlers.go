@@ -177,7 +177,6 @@ func (fdb *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 func (fdb *apiConfig) handleChangeUser(w http.ResponseWriter, r *http.Request) {
 	bearer := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
-	fmt.Println(bearer)
 	// TODO:
 	// Next, use the jwt.ParseWithClaims function to validate the signature of the JWT
 	// and extract the claims into a *jwt.Token struct.
@@ -207,11 +206,38 @@ func (fdb *apiConfig) handleChangeUser(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("ID:", id)
 
+	//----------------------- Update the User with the data in body -----------------------------
+	type parameters struct {
+		Password string `json:"password"`
+		Email    string `json:"email"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err = decoder.Decode(&params)
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	if err != nil {
+		sendErrorResponse(w, http.StatusNotAcceptable, err.Error())
+		return
+	}
+
+	_, err = fdb.db.UpdateUser(id, params.Email, string(hashedPassword))
+	if err != nil {
+		sendErrorResponse(w, http.StatusNotAcceptable, err.Error())
+		return
+	}
+
 	type ResponseUser struct {
-		Id int `json:"id"`
+		Id    int    `json:"id"`
+		Email string `json:"email"`
 	}
 	responseVal := ResponseUser{
-		Id: id,
+		Id:    id,
+		Email: params.Email,
 	}
 	fmt.Println("ID: ", id)
 	sendJsonResponse(w, http.StatusOK, responseVal)

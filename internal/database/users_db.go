@@ -41,6 +41,42 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 	return user, nil
 }
 
+// CreateUser creates a new user and saves it to disk
+func (db *DB) UpdateUser(id int, email string, password string) (User, error) {
+	fmt.Printf("Updating user: %d\n", id)
+
+	// INFO: Check that the user exixsts, so we can update it
+	user, err := db.GetUserById(id)
+	if err != nil {
+		return User{}, err
+	}
+
+	// INFO: Check if the email changed...and if so, is the new email already in db
+	if email != user.Email {
+		_, err = db.GetUserByEmail(email)
+		if err == nil {
+			return User{}, ErrDuplicate
+		}
+	}
+
+	// INFO: Set the new email and pw...even if some might be the same as before
+	user.Email = email
+	user.Password = password
+
+	dbs, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+	dbs.SetUser(id, user)
+
+	err = db.writeDB(dbs)
+	if err != nil {
+		return User{}, err
+	}
+
+	return user, nil
+}
+
 // GetChirps returns all chirps in the database
 func (db *DB) GetUsers() ([]User, error) {
 	dbs, err := db.loadDB()
