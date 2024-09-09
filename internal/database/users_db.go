@@ -4,13 +4,19 @@ import (
 	"fmt"
 )
 
+type User struct {
+	Id       int    `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 // CreateUser creates a new user and saves it to disk
 func (db *DB) CreateUser(email string, password string) (User, error) {
 	fmt.Printf("Creating user with email: %s\n", email)
 
 	_, err := db.GetUserByEmail(email)
 	if err == nil {
-		return User{}, fmt.Errorf("User (%s) already exist", email)
+		return User{}, ErrDuplicate
 	}
 
 	dbs, err := db.loadDB()
@@ -60,7 +66,7 @@ func (db *DB) GetUserById(id int) (User, error) {
 	if ok {
 		return user, nil
 	}
-	return User{}, fmt.Errorf("User Id not in db")
+	return User{}, ErrNotExist
 }
 
 func (db *DB) GetUserByEmail(email string) (User, error) {
@@ -70,11 +76,10 @@ func (db *DB) GetUserByEmail(email string) (User, error) {
 	}
 
 	for _, user := range dbs.Users {
-		// fmt.Printf("Comparing users: %v - %s", user, email)
 		if user.Email == email {
 			return user, nil
 		}
 	}
 
-	return User{}, fmt.Errorf("User (email) not in db")
+	return User{}, ErrNotExist
 }

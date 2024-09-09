@@ -12,6 +12,9 @@ type DB struct {
 	mux  *sync.RWMutex
 }
 
+var ErrNotExist = errors.New("resource does not exist")
+var ErrDuplicate = errors.New("resource already exist")
+
 // NewDB creates a new database connection
 // and creates the database file if it doesn't exist
 func NewDB(path string) (*DB, error) {
@@ -89,15 +92,6 @@ type DBStructure struct {
 	Chirps map[int]Chirp `json:"chirps"`
 	Users  map[int]User  `json:"users"`
 	mux    *sync.Mutex
-}
-type Chirp struct {
-	Id   int    `json:"id"`
-	Body string `json:"body"`
-}
-type User struct {
-	Id       int    `json:"id"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
 }
 
 func (dbs *DBStructure) GetUser(id int) (User, bool) {

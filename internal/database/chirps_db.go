@@ -1,11 +1,12 @@
 package database
 
-import "fmt"
+type Chirp struct {
+	Id   int    `json:"id"`
+	Body string `json:"body"`
+}
 
 // CreateChirp creates a new chirp and saves it to disk
 func (db *DB) CreateChirp(body string) (Chirp, error) {
-	// db.mux.Lock()
-	// defer db.mux.Unlock()
 	dbs, err := db.loadDB()
 	if err != nil {
 		return Chirp{}, err
@@ -51,5 +52,5 @@ func (db *DB) GetChirp(id int) (Chirp, error) {
 	if ok {
 		return chirp, nil
 	}
-	return Chirp{}, fmt.Errorf("Chirp Id not in db")
+	return Chirp{}, ErrNotExist
 }

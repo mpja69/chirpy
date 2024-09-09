@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/mpja69/chirpy/internal/database"
 )
 
 type apiConfig struct {
 	fileserverHits int
 	db             *database.DB
+	jwtSecret      []byte
 }
 
 func main() {
@@ -30,10 +32,16 @@ func main() {
 		log.Fatal("Couldn't create database")
 	}
 
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatalf("Env file error: %v\n", err)
+	}
 	apiCfg := apiConfig{
 		fileserverHits: 0,
 		db:             db,
+		jwtSecret:      []byte(os.Getenv("JWT_SECRET")),
 	}
+
 	mux := http.NewServeMux()
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(fileRoot)))))
 
@@ -55,6 +63,7 @@ func main() {
 	mux.HandleFunc("GET /api/users/{userId}", apiCfg.handleGetUserById)
 
 	mux.HandleFunc("POST /api/login", apiCfg.handleLogin)
+	mux.HandleFunc("PUT /api/users", apiCfg.handleChangeUser)
 	srv := &http.Server{
 		Handler: mux,
 		Addr:    ":" + port,
