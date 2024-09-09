@@ -95,8 +95,9 @@ type Chirp struct {
 	Body string `json:"body"`
 }
 type User struct {
-	Id    int    `json:"id"`
-	Email string `json:"email"`
+	Id       int    `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func (dbs *DBStructure) GetUser(id int) (User, bool) {

@@ -5,7 +5,7 @@ import (
 )
 
 // CreateUser creates a new user and saves it to disk
-func (db *DB) CreateUser(email string) (User, error) {
+func (db *DB) CreateUser(email string, password string) (User, error) {
 	fmt.Printf("Creating user with email: %s\n", email)
 
 	dbs, err := db.loadDB()
@@ -15,8 +15,9 @@ func (db *DB) CreateUser(email string) (User, error) {
 	id := len(dbs.Users) + 1
 	fmt.Printf("Assigned ID: %d\n", id)
 	user := User{
-		Id:    id,
-		Email: email,
+		Id:       id,
+		Email:    email,
+		Password: password,
 	}
 
 	dbs.SetUser(id, user)

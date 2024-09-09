@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/mpja69/chirpy/internal/database"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (fdb *apiConfig) handleGetUsers(w http.ResponseWriter, r *http.Request) {
@@ -45,8 +46,10 @@ func (cfg *apiConfig) handleGetUserById(w http.ResponseWriter, r *http.Request) 
 }
 
 func (fdb *apiConfig) handlePostUsers(w http.ResponseWriter, r *http.Request) {
+	//TODO: 1) Ta in ett password från "payload:en"
 	type parameters struct {
-		Email string `json:"email"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -56,10 +59,31 @@ func (fdb *apiConfig) handlePostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := fdb.db.CreateUser(params.Email)
+	//TODO: 2) Kryptera password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	if err != nil {
+		sendErrorResponse(w, http.StatusNotAcceptable, err.Error())
+		return
+	}
+	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(params.Password))
+	if err != nil {
+		sendErrorResponse(w, http.StatusNotAcceptable, err.Error())
+	}
+
+	//TODO: 3) Spara det krypterade pw i db
+	user, err := fdb.db.CreateUser(params.Email, string(hashedPassword))
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	sendJsonResponse(w, http.StatusCreated, user)
+	//TODO: 4) Skicka tillbaka allt utom passwword
+	type responseUser struct {
+		Id    int    `json:"id"`
+		Email string `json:"email"`
+	}
+	responseVal := responseUser{
+		Id:    user.Id,
+		Email: user.Email,
+	}
+	sendJsonResponse(w, http.StatusCreated, responseVal)
 }
