@@ -5,7 +5,7 @@ import "log"
 import "net/http"
 
 func sendErrorResponse(w http.ResponseWriter, code int, msg string) {
-	log.Printf("Error: %d", code)
+	log.Printf("Error: %d, %s", code, msg)
 	type returnVals struct {
 		Error string `json:"error"`
 	}

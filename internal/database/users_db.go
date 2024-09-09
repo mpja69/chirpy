@@ -8,6 +8,11 @@ import (
 func (db *DB) CreateUser(email string, password string) (User, error) {
 	fmt.Printf("Creating user with email: %s\n", email)
 
+	_, err := db.GetUserByEmail(email)
+	if err == nil {
+		return User{}, fmt.Errorf("User (%s) already exist", email)
+	}
+
 	dbs, err := db.loadDB()
 	if err != nil {
 		return User{}, err
@@ -44,7 +49,7 @@ func (db *DB) GetUsers() ([]User, error) {
 	return users, nil
 }
 
-func (db *DB) GetUser(id int) (User, error) {
+func (db *DB) GetUserById(id int) (User, error) {
 	dbs, err := db.loadDB()
 	if err != nil {
 		return User{}, err
@@ -56,4 +61,20 @@ func (db *DB) GetUser(id int) (User, error) {
 		return user, nil
 	}
 	return User{}, fmt.Errorf("User Id not in db")
+}
+
+func (db *DB) GetUserByEmail(email string) (User, error) {
+	dbs, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+
+	for _, user := range dbs.Users {
+		// fmt.Printf("Comparing users: %v - %s", user, email)
+		if user.Email == email {
+			return user, nil
+		}
+	}
+
+	return User{}, fmt.Errorf("User (email) not in db")
 }
