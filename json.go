@@ -1,8 +1,10 @@
 package main
 
-import "encoding/json"
-import "log"
-import "net/http"
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+)
 
 func sendErrorResponse(w http.ResponseWriter, code int, msg string) {
 	log.Printf("Error: %d, %s", code, msg)

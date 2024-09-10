@@ -58,12 +58,12 @@ func main() {
 	mux.HandleFunc("GET /api/chirps", apiCfg.handleGetChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpId}", apiCfg.handleGetChirpById)
 
-	mux.HandleFunc("POST /api/users", apiCfg.handlePostUsers)
+	mux.HandleFunc("POST /api/users", apiCfg.handleCreateUser)
 	mux.HandleFunc("GET /api/users", apiCfg.handleGetUsers)
 	mux.HandleFunc("GET /api/users/{userId}", apiCfg.handleGetUserById)
 
 	mux.HandleFunc("POST /api/login", apiCfg.handleLogin)
-	mux.HandleFunc("PUT /api/users", apiCfg.handleChangeUser)
+	mux.HandleFunc("PUT /api/users", apiCfg.handleUpdateUser)
 	srv := &http.Server{
 		Handler: mux,
 		Addr:    ":" + port,
