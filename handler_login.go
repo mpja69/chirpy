@@ -10,6 +10,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TODO: The response body format:
+// {
+// 	"id": 1,
+// 	"email": "lane@example.com",
+// 	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+// 	"refresh_token": "56aa826d22baab4b5ec2cea41a59ecbba03e542aedbb31d9b80326ac8ffcfa2a"
+// }
+// - Access tokens (JWTs) should expire after 1 hour. Expiration time is stored in the exp claim.
+// - Refresh tokens should expire after 60 days. Expiration time is stored in the database.
+
 // NOTE:	handleLogin, POST /api/login, authenticates and logs in a user
 //
 //	Takes email, password (and optional expiration time in seconds)

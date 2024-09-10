@@ -3,11 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mpja69/chirpy/internal/auth"
 	"net/http"
 	"strconv"
-	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -17,33 +16,22 @@ func (fdb *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 		Email    string `json:"email"`
 	}
-	bearer := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
-	// TODO:
-	// Next, use the jwt.ParseWithClaims function to validate the signature of the JWT
-	// and extract the claims into a *jwt.Token struct.
-	token, err := jwt.ParseWithClaims(bearer, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return fdb.jwtSecret, nil
-	})
+	token, err := auth.GetBearerToken(r, string(fdb.jwtSecret))
 	if err != nil {
-		// TODO:
-		// An error will be returned if the token is invalid or has expired.
-		// If the token is invalid, return a 401 Unauthorized response.
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	}
-	if !token.Valid {
-		sendErrorResponse(w, http.StatusUnauthorized, "Token is not valid")
+
+	userIdString, err := auth.ValidateJWT(token, fdb.jwtSecret)
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
-	// TODO:
-	// If all is well with the token,
-	// use the token.Claims interface to get access to the user's id from the claims
-	// (which should be stored in the Subject field).
-	claims := token.Claims.(*jwt.RegisteredClaims)
-	id, err := strconv.Atoi(claims.Subject)
+	id, err := strconv.Atoi(userIdString)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "ID not found or invalid")
+		sendErrorResponse(w, http.StatusNotFound, "ID not a number")
 		return
 	}
 	fmt.Println("ID:", id)
