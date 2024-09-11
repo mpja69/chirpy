@@ -89,9 +89,18 @@ func (db *DB) writeDB(dbStructure DBStructure) error {
 }
 
 type DBStructure struct {
-	Chirps map[int]Chirp `json:"chirps"`
-	Users  map[int]User  `json:"users"`
+	Chirps map[int]Chirp    `json:"chirps"`
+	Users  map[int]User     `json:"users"`
+	Tokens map[string]Token `json:"tokens"`
 	mux    *sync.Mutex
+	// HACK: Maybe I should have 3 mutexes? One for each map.
+}
+
+func (dbs *DBStructure) GetToken(tokenString string) (Token, bool) {
+	dbs.mux.Lock()
+	defer dbs.mux.Unlock()
+	token, ok := dbs.Tokens[tokenString]
+	return token, ok
 }
 
 func (dbs *DBStructure) GetUser(id int) (User, bool) {
@@ -108,6 +117,12 @@ func (dbs *DBStructure) GetChirp(id int) (Chirp, bool) {
 	return chirp, ok
 }
 
+func (dbs *DBStructure) SetToken(tokenString string, token Token) {
+	dbs.mux.Lock()
+	defer dbs.mux.Unlock()
+	dbs.Tokens[tokenString] = token
+}
+
 func (dbs *DBStructure) SetUser(id int, user User) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
@@ -118,4 +133,10 @@ func (dbs *DBStructure) SetChirp(id int, chirp Chirp) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
 	dbs.Chirps[id] = chirp
+}
+
+func (dbs *DBStructure) DeleteToken(tokenString string) {
+	dbs.mux.Lock()
+	defer dbs.mux.Unlock()
+	delete(dbs.Tokens, tokenString)
 }
