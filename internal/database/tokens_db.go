@@ -7,13 +7,13 @@ import (
 
 type Token struct {
 	UserId         int    `json:"user_id"`
-	ExpirationTime int    `json:"expiration_time"`
+	ExpirationTime int64  `json:"expiration_time"`
 	Token          string `json:"token"`
 }
 
 // CreateUser creates a new user and saves it to disk
-func (db *DB) CreateTokenForUserId(userId int, tokenString string, expirationTime time.Time) (Token, error) {
-	fmt.Printf("Creating token: %s, for userId: %d, at time: %v \n", tokenString, userId, expirationTime)
+func (db *DB) CreateTokenForUserId(userId int, tokenString string, duration time.Duration) (Token, error) {
+	fmt.Printf("Creating token: %s, for userId: %d, at time: %v \n", tokenString, userId, duration)
 
 	//TODO: Kolla om det redan finns ett token för userId
 	_, err := db.GetTokenByUserId(userId)
@@ -27,7 +27,7 @@ func (db *DB) CreateTokenForUserId(userId int, tokenString string, expirationTim
 	}
 	token := Token{
 		UserId:         userId,
-		ExpirationTime: int(expirationTime.Unix()),
+		ExpirationTime: time.Now().Add(time.Hour * duration).Unix(),
 		Token:          tokenString,
 	}
 
@@ -77,7 +77,7 @@ func (db *DB) RevokeToken(tokenString string) error {
 }
 
 // RefreshToken - Find old token, Copy userID, Set new expiration time, Save the new and delete the old
-func (db *DB) RefreshToken(oldTokenString, newTokenString string, expirationTime time.Time) error {
+func (db *DB) RefreshToken(oldTokenString, newTokenString string, duration time.Duration) error {
 	dbs, err := db.loadDB()
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (db *DB) RefreshToken(oldTokenString, newTokenString string, expirationTime
 
 	newToken := Token{
 		UserId:         oldtoken.UserId,
-		ExpirationTime: int(expirationTime.Unix()),
+		ExpirationTime: time.Now().Add(time.Hour * duration).Unix(),
 		Token:          newTokenString,
 	}
 

@@ -52,8 +52,7 @@ func (fdb *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Spara refresh token och dess exp-time i databasen. Egen tabell?
-	expirationTime := time.Now().Add(time.Hour)
-	fdb.db.CreateTokenForUserId(user.Id, refreshToken, expirationTime)
+	fdb.db.CreateTokenForUserId(user.Id, refreshToken, time.Hour*24*60)
 
 	type ResponseUser struct {
 		Id           int    `json:"id"`
