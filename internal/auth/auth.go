@@ -16,7 +16,7 @@ import (
 var ErrNoAuthHeaderIncluded = errors.New("no auth header included in request")
 var ErrAuthHeaderMalformed = errors.New("auth header is malformed")
 
-func GetBearerToken(request *http.Request, secret string) (string, error) {
+func GetBearerToken(request *http.Request) (string, error) {
 	header := request.Header.Get("Authorization")
 	if header == "" {
 		return "", ErrNoAuthHeaderIncluded

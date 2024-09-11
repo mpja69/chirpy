@@ -68,3 +68,60 @@ func (fdb *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	sendJsonResponse(w, http.StatusOK, responseVal)
 }
+
+// handleRevokeToken
+// Takes no body, BUT the refresh token
+//
+//	Returns no body, BUT status 204
+func (fdb *apiConfig) handleRevokeToken(w http.ResponseWriter, r *http.Request) {
+	refreshToken, err := auth.GetBearerToken(r)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	err = fdb.db.RevokeToken(refreshToken)
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// handleRefreshToken
+// Takes no body, BUT the refresh token
+//
+//	Returns no body, BUT status 401 for invalid token, 200 for success
+func (fdb *apiConfig) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
+	oldTokenString, err := auth.GetBearerToken(r)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	oldToken, err := fdb.db.GetToken(oldTokenString)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	expirationTime := time.Unix(oldToken.ExpirationTime, 0)
+	if expirationTime.Before(time.Now().UTC()) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+
+	newTokenString, err := auth.MakeRefreshToken()
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	err = fdb.db.RefreshToken(oldTokenString, newTokenString, time.Hour*24*60)
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	type returnValue struct {
+		Token string `json:"token"`
+	}
+	sendJsonResponse(w, http.StatusOK, returnValue{Token: newTokenString})
+
+}

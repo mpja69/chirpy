@@ -17,7 +17,7 @@ func (fdb *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		Email    string `json:"email"`
 	}
 
-	token, err := auth.GetBearerToken(r, string(fdb.jwtSecret))
+	token, err := auth.GetBearerToken(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
