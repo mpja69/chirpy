@@ -16,16 +16,17 @@ func (fdb *apiConfig) handleGetUsers(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	//TODO: 4) Skicka tillbaka allt utom passwword
 	type ResponseUser struct {
-		Id    int    `json:"id"`
-		Email string `json:"email"`
+		Id          int    `json:"id"`
+		Email       string `json:"email"`
+		IsChirpyRed bool   `json:"is_chirpy_red"`
 	}
 	sortedUsers := []ResponseUser{}
 	for _, u := range users {
 		sortedUsers = append(sortedUsers, ResponseUser{
-			Id:    u.Id,
-			Email: u.Email,
+			Id:          u.Id,
+			Email:       u.Email,
+			IsChirpyRed: u.IsChirpyRed,
 		})
 	}
 	sort.Slice(sortedUsers, func(i int, j int) bool {
@@ -50,12 +51,14 @@ func (cfg *apiConfig) handleGetUserById(w http.ResponseWriter, r *http.Request) 
 	}
 	//TODO: 4) Skicka tillbaka allt utom passwword
 	type responseUser struct {
-		Id    int    `json:"id"`
-		Email string `json:"email"`
+		Id          int    `json:"id"`
+		Email       string `json:"email"`
+		IsChirpyRed bool   `json:"is_chirpy_red"`
 	}
 	responseVal := responseUser{
-		Id:    user.Id,
-		Email: user.Email,
+		Id:          user.Id,
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed,
 	}
 	sendJsonResponse(w, http.StatusOK, responseVal)
 }
@@ -87,12 +90,14 @@ func (fdb *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type ResponseUser struct {
-		Id    int    `json:"id"`
-		Email string `json:"email"`
+		Id          int    `json:"id"`
+		Email       string `json:"email"`
+		IsChirpyRed bool   `json:"is_chirpy_red"`
 	}
 	responseVal := ResponseUser{
-		Id:    user.Id,
-		Email: user.Email,
+		Id:          user.Id,
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed,
 	}
 	sendJsonResponse(w, http.StatusCreated, responseVal)
 }

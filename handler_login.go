@@ -58,12 +58,14 @@ func (fdb *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 		Email        string `json:"email"`
 		Token        string `json:"token"`
 		RefreshToken string `json:"refresh_token"`
+		IsChirpyRed  bool   `json:"is_chirpy_red"`
 	}
 	responseVal := ResponseUser{
 		Id:           user.Id,
 		Email:        user.Email,
 		Token:        accessToken,
 		RefreshToken: refreshTokenString,
+		IsChirpyRed:  user.IsChirpyRed,
 	}
 	sendJsonResponse(w, http.StatusOK, responseVal)
 }

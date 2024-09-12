@@ -1,19 +1,14 @@
 package database
 
-import (
-	"fmt"
-)
-
 type User struct {
-	Id       int    `json:"id"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Id          int    `json:"id"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	IsChirpyRed bool   `json:"is_chirpy_red"`
 }
 
 // CreateUser creates a new user and saves it to disk
 func (db *DB) CreateUser(email string, password string) (User, error) {
-	fmt.Printf("Creating user with email: %s\n", email)
-
 	_, err := db.GetUserByEmail(email)
 	if err == nil {
 		return User{}, ErrDuplicate
@@ -24,11 +19,11 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 		return User{}, err
 	}
 	id := len(dbs.Users) + 1
-	fmt.Printf("Assigned ID: %d\n", id)
 	user := User{
-		Id:       id,
-		Email:    email,
-		Password: password,
+		Id:          id,
+		Email:       email,
+		Password:    password,
+		IsChirpyRed: false,
 	}
 
 	dbs.SetUser(id, user)
@@ -41,17 +36,39 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 	return user, nil
 }
 
-// CreateUser creates a new user and saves it to disk
-func (db *DB) UpdateUser(id int, email string, password string) (User, error) {
-	fmt.Printf("Updating user: %d\n", id)
+// UpgradeUser - Can updrade to Chirpy Red
+func (db *DB) UpgradeUser(id int, isChirpyRed bool) (User, error) {
+	dbs, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+	user, ok := dbs.GetUser(id)
+	if !ok {
+		return User{}, ErrNotExist
+	}
+	user.IsChirpyRed = isChirpyRed
 
-	// INFO: Check that the user exixsts, so we can update it
-	user, err := db.GetUserById(id)
+	dbs.SetUser(id, user)
+
+	err = db.writeDB(dbs)
 	if err != nil {
 		return User{}, err
 	}
 
-	// INFO: Check if the email changed...and if so, is the new email already in db
+	return user, nil
+}
+
+// UpdateUser - Update email and/or password
+func (db *DB) UpdateUser(id int, email string, password string) (User, error) {
+	dbs, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+	user, ok := dbs.GetUser(id)
+	if !ok {
+		return User{}, ErrNotExist
+	}
+
 	if email != user.Email {
 		_, err = db.GetUserByEmail(email)
 		if err == nil {
@@ -59,14 +76,9 @@ func (db *DB) UpdateUser(id int, email string, password string) (User, error) {
 		}
 	}
 
-	// INFO: Set the new email and pw...even if some might be the same as before
 	user.Email = email
 	user.Password = password
 
-	dbs, err := db.loadDB()
-	if err != nil {
-		return User{}, err
-	}
 	dbs.SetUser(id, user)
 
 	err = db.writeDB(dbs)
@@ -77,7 +89,7 @@ func (db *DB) UpdateUser(id int, email string, password string) (User, error) {
 	return user, nil
 }
 
-// GetChirps returns all chirps in the database
+// GetUsers -  returns all chirps in the database
 func (db *DB) GetUsers() ([]User, error) {
 	dbs, err := db.loadDB()
 	if err != nil {
@@ -91,6 +103,7 @@ func (db *DB) GetUsers() ([]User, error) {
 	return users, nil
 }
 
+// GetUserById - Get one user
 func (db *DB) GetUserById(id int) (User, error) {
 	dbs, err := db.loadDB()
 	if err != nil {

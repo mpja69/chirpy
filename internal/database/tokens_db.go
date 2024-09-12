@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -13,14 +12,6 @@ type RefreshToken struct {
 
 // SaveTokenForUserId - Saves a refresh token, connected to a UserId and expiration time
 func (db *DB) SaveTokenForUserId(userId int, tokenString string, duration time.Duration) (RefreshToken, error) {
-	fmt.Printf("Creating token: %s, for userId: %d, at time: %v \n", tokenString, userId, duration)
-
-	//TODO: Kolla om det redan finns ett token för userId
-	// _, err := db.GetTokenByUserId(userId)
-	// if err == nil {
-	// 	return Token{}, ErrDuplicate
-	// }
-
 	dbs, err := db.loadDB()
 	if err != nil {
 		return RefreshToken{}, err
@@ -43,8 +34,6 @@ func (db *DB) SaveTokenForUserId(userId int, tokenString string, duration time.D
 
 // Revoke token - Just delete from map and file
 func (db *DB) RevokeToken(tokenString string) error {
-	fmt.Printf("Revoking (deleting) token: %s\n", tokenString)
-
 	dbs, err := db.loadDB()
 	if err != nil {
 		return err

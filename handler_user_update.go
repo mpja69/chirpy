@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mpja69/chirpy/internal/auth"
 	"net/http"
 	"strconv"
+
+	"github.com/mpja69/chirpy/internal/auth"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -57,14 +58,49 @@ func (fdb *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user, err := fdb.db.GetUserById(id)
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+	}
+
 	type ResponseUser struct {
-		Id    int    `json:"id"`
-		Email string `json:"email"`
+		Id          int    `json:"id"`
+		Email       string `json:"email"`
+		IsChirpyRed bool   `json:"is_chirpy_red"`
 	}
 	responseVal := ResponseUser{
-		Id:    id,
-		Email: params.Email,
+		Id:          user.Id,
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed,
 	}
-	fmt.Println("ID: ", id)
 	sendJsonResponse(w, http.StatusOK, responseVal)
+}
+
+// handleWebhooks - "POST /api/polka/webhooks"
+func (cfg *apiConfig) handleWebhooks(w http.ResponseWriter, r *http.Request) {
+	type userData struct {
+		UserId int `json:"user_id"`
+	}
+	type parameters struct {
+		Event string   `json:"event"`
+		Data  userData `json:"data"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if params.Event != "user.upgraded" {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	_, err = cfg.db.UpgradeUser(params.Data.UserId, true)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	sendJsonResponse(w, http.StatusNoContent, struct{}{})
+
 }
