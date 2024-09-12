@@ -13,8 +13,8 @@ import (
 )
 
 // handleGetChirps "GET /api/chirps",
-func (fdb *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
-	chirps, err := fdb.db.GetChirps()
+func (cfg *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
+	chirps, err := cfg.db.GetChirps()
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -51,13 +51,13 @@ func (cfg *apiConfig) handleGetChirpById(w http.ResponseWriter, r *http.Request)
 }
 
 // handlePostChirps - "POST /api/chirps"
-func (fdb *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := auth.GetBearerToken(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	}
-	userIdString, err := auth.ValidateJWT(accessToken, fdb.jwtSecret)
+	userIdString, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
@@ -67,7 +67,7 @@ func (fdb *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(w, http.StatusBadRequest, "ID not a number")
 		return
 	}
-	user, err := fdb.db.GetUserById(userId)
+	user, err := cfg.db.GetUserById(userId)
 	log.Printf("HandlePostChirps: User: %d, %s is authenticated\n", user.Id, user.Email)
 
 	type parameters struct {
@@ -93,7 +93,7 @@ func (fdb *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	}
 	cleanedMsg := cleanBody(params.Body, profaneWords)
 
-	chirp, err := fdb.db.CreateChirp(cleanedMsg, user.Id)
+	chirp, err := cfg.db.CreateChirp(cleanedMsg, user.Id)
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -110,4 +110,41 @@ func cleanBody(msg string, badWords map[string]struct{}) string {
 	}
 	cleanedMsg := strings.Join(words, " ")
 	return cleanedMsg
+}
+
+// handleDeleteChirps - "DELETE /api/chirps/{chirpID}"
+func (cfg *apiConfig) handleDeleteChirpById(w http.ResponseWriter, r *http.Request) {
+	accessToken, err := auth.GetBearerToken(r)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	userIdString, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	userId, err := strconv.Atoi(userIdString)
+	if err != nil {
+		sendErrorResponse(w, http.StatusBadRequest, "ID not a number")
+		return
+	}
+	user, err := cfg.db.GetUserById(userId)
+	log.Printf("HandleDeleteChirps: User: %d, %s is authenticated\n", user.Id, user.Email)
+
+	idValue := r.PathValue("chirpId")
+	id, err := strconv.Atoi(idValue)
+	if err != nil {
+		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	chirp, err := cfg.db.GetChirp(id)
+	if err != nil {
+		sendErrorResponse(w, http.StatusNotFound, err.Error())
+		return
+	}
+	if chirp.AuthorId != user.Id {
+		w.WriteHeader(http.StatusForbidden)
+	}
+	sendJsonResponse(w, http.StatusNoContent, chirp)
 }
