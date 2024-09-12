@@ -22,7 +22,7 @@ func (db *DB) SaveTokenForUserId(userId int, tokenString string, duration time.D
 		Token:     tokenString,
 	}
 
-	dbs.SetToken(tokenString, token)
+	dbs.setToken(tokenString, token)
 
 	err = db.writeDB(dbs)
 	if err != nil {
@@ -39,7 +39,7 @@ func (db *DB) RevokeToken(tokenString string) error {
 		return err
 	}
 
-	dbs.DeleteToken(tokenString)
+	dbs.deleteToken(tokenString)
 
 	err = db.writeDB(dbs)
 	if err != nil {
@@ -56,7 +56,7 @@ func (db *DB) GetToken(tokenString string) (RefreshToken, error) {
 		return RefreshToken{}, err
 	}
 
-	token, ok := dbs.GetToken(tokenString)
+	token, ok := dbs.getToken(tokenString)
 	if ok {
 		return token, nil
 	}

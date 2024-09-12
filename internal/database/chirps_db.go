@@ -19,7 +19,7 @@ func (db *DB) CreateChirp(body string, userId int) (Chirp, error) {
 		AuthorId: userId,
 	}
 
-	dbs.SetChirp(id, chirp)
+	dbs.setChirp(id, chirp)
 
 	err = db.writeDB(dbs)
 	if err != nil {
@@ -49,7 +49,7 @@ func (db *DB) GetChirp(id int) (Chirp, error) {
 		return Chirp{}, err
 	}
 
-	chirp, ok := dbs.GetChirp(id)
+	chirp, ok := dbs.getChirp(id)
 
 	if ok {
 		return chirp, nil

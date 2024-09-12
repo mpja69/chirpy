@@ -96,46 +96,46 @@ type DBStructure struct {
 	mux           *sync.Mutex
 }
 
-func (dbs *DBStructure) GetToken(tokenString string) (RefreshToken, bool) {
+func (dbs *DBStructure) getToken(tokenString string) (RefreshToken, bool) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
 	token, ok := dbs.RefreshTokens[tokenString]
 	return token, ok
 }
 
-func (dbs *DBStructure) GetUser(id int) (User, bool) {
+func (dbs *DBStructure) getUser(id int) (User, bool) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
 	user, ok := dbs.Users[id]
 	return user, ok
 }
 
-func (dbs *DBStructure) GetChirp(id int) (Chirp, bool) {
+func (dbs *DBStructure) getChirp(id int) (Chirp, bool) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
 	chirp, ok := dbs.Chirps[id]
 	return chirp, ok
 }
 
-func (dbs *DBStructure) SetToken(tokenString string, token RefreshToken) {
+func (dbs *DBStructure) setToken(tokenString string, token RefreshToken) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
 	dbs.RefreshTokens[tokenString] = token
 }
 
-func (dbs *DBStructure) SetUser(id int, user User) {
+func (dbs *DBStructure) setUser(id int, user User) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
 	dbs.Users[id] = user
 }
 
-func (dbs *DBStructure) SetChirp(id int, chirp Chirp) {
+func (dbs *DBStructure) setChirp(id int, chirp Chirp) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
 	dbs.Chirps[id] = chirp
 }
 
-func (dbs *DBStructure) DeleteToken(tokenString string) {
+func (dbs *DBStructure) deleteToken(tokenString string) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
 	delete(dbs.RefreshTokens, tokenString)

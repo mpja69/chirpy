@@ -26,7 +26,7 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 		IsChirpyRed: false,
 	}
 
-	dbs.SetUser(id, user)
+	dbs.setUser(id, user)
 
 	err = db.writeDB(dbs)
 	if err != nil {
@@ -42,13 +42,13 @@ func (db *DB) UpgradeUser(id int, isChirpyRed bool) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
-	user, ok := dbs.GetUser(id)
+	user, ok := dbs.getUser(id)
 	if !ok {
 		return User{}, ErrNotExist
 	}
 	user.IsChirpyRed = isChirpyRed
 
-	dbs.SetUser(id, user)
+	dbs.setUser(id, user)
 
 	err = db.writeDB(dbs)
 	if err != nil {
@@ -64,7 +64,7 @@ func (db *DB) UpdateUser(id int, email string, password string) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
-	user, ok := dbs.GetUser(id)
+	user, ok := dbs.getUser(id)
 	if !ok {
 		return User{}, ErrNotExist
 	}
@@ -79,7 +79,7 @@ func (db *DB) UpdateUser(id int, email string, password string) (User, error) {
 	user.Email = email
 	user.Password = password
 
-	dbs.SetUser(id, user)
+	dbs.setUser(id, user)
 
 	err = db.writeDB(dbs)
 	if err != nil {
@@ -110,7 +110,7 @@ func (db *DB) GetUserById(id int) (User, error) {
 		return User{}, err
 	}
 
-	user, ok := dbs.GetUser(id)
+	user, ok := dbs.getUser(id)
 
 	if ok {
 		return user, nil
