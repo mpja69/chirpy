@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// GET /api/users
+// handleGetUsers - GET /api/users
 func (fdb *apiConfig) handleGetUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := fdb.db.GetUsers()
 	if err != nil {
@@ -35,7 +35,7 @@ func (fdb *apiConfig) handleGetUsers(w http.ResponseWriter, r *http.Request) {
 	sendJsonResponse(w, http.StatusOK, sortedUsers)
 }
 
-// GET /api/users/{userId}
+// handleGetUserById -  GET /api/users/{userId}
 func (cfg *apiConfig) handleGetUserById(w http.ResponseWriter, r *http.Request) {
 	idValue := r.PathValue("userId")
 	id, err := strconv.Atoi(idValue)
@@ -60,7 +60,7 @@ func (cfg *apiConfig) handleGetUserById(w http.ResponseWriter, r *http.Request) 
 	sendJsonResponse(w, http.StatusOK, responseVal)
 }
 
-// POST /api/users
+// handleCreateUser - POST /api/users
 func (fdb *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password string `json:"password"`

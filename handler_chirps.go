@@ -2,14 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/mpja69/chirpy/internal/auth"
 	"github.com/mpja69/chirpy/internal/database"
 )
 
+// handleGetChirps "GET /api/chirps",
 func (fdb *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 	chirps, err := fdb.db.GetChirps()
 	if err != nil {
@@ -17,10 +20,11 @@ func (fdb *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sortedChirps := []database.Chirp{}
-	for _, ch := range chirps {
+	for _, chirp := range chirps {
 		sortedChirps = append(sortedChirps, database.Chirp{
-			Id:   ch.Id,
-			Body: ch.Body,
+			Id:       chirp.Id,
+			Body:     chirp.Body,
+			AuthorId: chirp.AuthorId,
 		})
 	}
 	sort.Slice(sortedChirps, func(i int, j int) bool {
@@ -30,6 +34,7 @@ func (fdb *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 	sendJsonResponse(w, http.StatusOK, sortedChirps)
 }
 
+// handleGetChirpById - "GET /api/chirps/{chirpId}"
 func (cfg *apiConfig) handleGetChirpById(w http.ResponseWriter, r *http.Request) {
 	idValue := r.PathValue("chirpId")
 	id, err := strconv.Atoi(idValue)
@@ -45,14 +50,32 @@ func (cfg *apiConfig) handleGetChirpById(w http.ResponseWriter, r *http.Request)
 	sendJsonResponse(w, http.StatusOK, chirp)
 }
 
+// handlePostChirps - "POST /api/chirps"
 func (fdb *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
+	accessToken, err := auth.GetBearerToken(r)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	userIdString, err := auth.ValidateJWT(accessToken, fdb.jwtSecret)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	userId, err := strconv.Atoi(userIdString)
+	if err != nil {
+		sendErrorResponse(w, http.StatusBadRequest, "ID not a number")
+		return
+	}
+	user, err := fdb.db.GetUserById(userId)
+	log.Printf("HandlePostChirps: User: %d, %s is authenticated\n", user.Id, user.Email)
+
 	type parameters struct {
 		Body string `json:"body"`
 	}
-
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -70,7 +93,7 @@ func (fdb *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	}
 	cleanedMsg := cleanBody(params.Body, profaneWords)
 
-	chirp, err := fdb.db.CreateChirp(cleanedMsg)
+	chirp, err := fdb.db.CreateChirp(cleanedMsg, user.Id)
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

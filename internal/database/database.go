@@ -94,7 +94,6 @@ type DBStructure struct {
 	Users         map[int]User            `json:"users"`
 	RefreshTokens map[string]RefreshToken `json:"tokens"`
 	mux           *sync.Mutex
-	// HACK: Maybe I should have 3 mutexes? One for each map.
 }
 
 func (dbs *DBStructure) GetToken(tokenString string) (RefreshToken, bool) {

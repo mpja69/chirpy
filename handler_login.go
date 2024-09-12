@@ -102,9 +102,8 @@ func (fdb *apiConfig) handleRefreshToken(w http.ResponseWriter, r *http.Request)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	// expirationTime := time.Unix(refreshToken.ExpirationTime, 0)
-	if refreshToken.ExpirationTime.Before(time.Now().UTC()) {
-		w.WriteHeader(http.StatusServiceUnavailable)
+	if refreshToken.ExpiresAt.Before(time.Now().UTC()) {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 

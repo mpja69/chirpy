@@ -17,13 +17,13 @@ func (fdb *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		Email    string `json:"email"`
 	}
 
-	token, err := auth.GetBearerToken(r)
+	accessToken, err := auth.GetBearerToken(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	userIdString, err := auth.ValidateJWT(token, fdb.jwtSecret)
+	userIdString, err := auth.ValidateJWT(accessToken, fdb.jwtSecret)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
