@@ -43,8 +43,9 @@ func (db *DB) ensureDB() error {
 
 func (db *DB) createDB() error {
 	dbs := DBStructure{
-		Chirps: map[int]Chirp{},
-		Users:  map[int]User{},
+		Chirps:        map[int]Chirp{},
+		Users:         map[int]User{},
+		RefreshTokens: map[string]RefreshToken{},
 	}
 	return db.writeDB(dbs)
 }
@@ -89,17 +90,17 @@ func (db *DB) writeDB(dbStructure DBStructure) error {
 }
 
 type DBStructure struct {
-	Chirps map[int]Chirp    `json:"chirps"`
-	Users  map[int]User     `json:"users"`
-	Tokens map[string]Token `json:"tokens"`
-	mux    *sync.Mutex
+	Chirps        map[int]Chirp           `json:"chirps"`
+	Users         map[int]User            `json:"users"`
+	RefreshTokens map[string]RefreshToken `json:"tokens"`
+	mux           *sync.Mutex
 	// HACK: Maybe I should have 3 mutexes? One for each map.
 }
 
-func (dbs *DBStructure) GetToken(tokenString string) (Token, bool) {
+func (dbs *DBStructure) GetToken(tokenString string) (RefreshToken, bool) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
-	token, ok := dbs.Tokens[tokenString]
+	token, ok := dbs.RefreshTokens[tokenString]
 	return token, ok
 }
 
@@ -117,10 +118,10 @@ func (dbs *DBStructure) GetChirp(id int) (Chirp, bool) {
 	return chirp, ok
 }
 
-func (dbs *DBStructure) SetToken(tokenString string, token Token) {
+func (dbs *DBStructure) SetToken(tokenString string, token RefreshToken) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
-	dbs.Tokens[tokenString] = token
+	dbs.RefreshTokens[tokenString] = token
 }
 
 func (dbs *DBStructure) SetUser(id int, user User) {
@@ -138,5 +139,5 @@ func (dbs *DBStructure) SetChirp(id int, chirp Chirp) {
 func (dbs *DBStructure) DeleteToken(tokenString string) {
 	dbs.mux.Lock()
 	defer dbs.mux.Unlock()
-	delete(dbs.Tokens, tokenString)
+	delete(dbs.RefreshTokens, tokenString)
 }

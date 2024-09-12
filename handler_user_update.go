@@ -25,7 +25,7 @@ func (fdb *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	userIdString, err := auth.ValidateJWT(token, fdb.jwtSecret)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 

@@ -23,36 +23,35 @@ func (fdb *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, "Err decoding params - "+err.Error())
 		return
 	}
 
 	user, err := fdb.db.GetUserByEmail(params.Email)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, "Err geeting user from db - "+err.Error())
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password))
 	if err != nil {
-		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		sendErrorResponse(w, http.StatusUnauthorized, "Err wrong pw - "+err.Error())
 		return
 	}
 
 	accessToken, err := auth.MakeJWT(user.Id, fdb.jwtSecret, time.Hour)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, "Err making JWT - "+err.Error())
 		return
 	}
 
-	refreshToken, err := auth.MakeRefreshToken()
+	refreshTokenString, err := auth.MakeRefreshToken()
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, "Err making refresh token"+err.Error())
 		return
 	}
 
-	// TODO: Spara refresh token och dess exp-time i databasen. Egen tabell?
-	fdb.db.CreateTokenForUserId(user.Id, refreshToken, time.Hour*24*60)
+	fdb.db.SaveTokenForUserId(user.Id, refreshTokenString, time.Hour*24*60)
 
 	type ResponseUser struct {
 		Id           int    `json:"id"`
@@ -64,22 +63,22 @@ func (fdb *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 		Id:           user.Id,
 		Email:        user.Email,
 		Token:        accessToken,
-		RefreshToken: refreshToken,
+		RefreshToken: refreshTokenString,
 	}
 	sendJsonResponse(w, http.StatusOK, responseVal)
 }
 
 // handleRevokeToken
 // Takes no body, BUT the refresh token
-//
-//	Returns no body, BUT status 204
+// Deletes the refresh token
+// Returns no body, BUT status 204, or 401 if ...
 func (fdb *apiConfig) handleRevokeToken(w http.ResponseWriter, r *http.Request) {
-	refreshToken, err := auth.GetBearerToken(r)
+	refreshTokenString, err := auth.GetBearerToken(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	}
-	err = fdb.db.RevokeToken(refreshToken)
+	err = fdb.db.RevokeToken(refreshTokenString)
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -90,31 +89,30 @@ func (fdb *apiConfig) handleRevokeToken(w http.ResponseWriter, r *http.Request) 
 // handleRefreshToken
 // Takes no body, BUT the refresh token
 //
-//	Returns no body, BUT status 401 for invalid token, 200 for success
+//	Returns a new Acces Token, BUT status 401 for invalid token, 200 for success
 func (fdb *apiConfig) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
-	oldTokenString, err := auth.GetBearerToken(r)
+	refreshTokenString, err := auth.GetBearerToken(r)
 	if err != nil {
-		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		sendErrorResponse(w, http.StatusBadRequest, "Err missing auth header - "+err.Error())
 		return
 	}
 
-	oldToken, err := fdb.db.GetToken(oldTokenString)
+	refreshToken, err := fdb.db.GetToken(refreshTokenString)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	expirationTime := time.Unix(oldToken.ExpirationTime, 0)
-	if expirationTime.Before(time.Now().UTC()) {
+	// expirationTime := time.Unix(refreshToken.ExpirationTime, 0)
+	if refreshToken.ExpirationTime.Before(time.Now().UTC()) {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}
 
-	newTokenString, err := auth.MakeRefreshToken()
+	accessToken, err := auth.MakeJWT(refreshToken.UserId, fdb.jwtSecret, time.Hour)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, "Err making JWT - "+err.Error())
 		return
 	}
-	err = fdb.db.RefreshToken(oldTokenString, newTokenString, time.Hour*24*60)
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -122,6 +120,6 @@ func (fdb *apiConfig) handleRefreshToken(w http.ResponseWriter, r *http.Request)
 	type returnValue struct {
 		Token string `json:"token"`
 	}
-	sendJsonResponse(w, http.StatusOK, returnValue{Token: newTokenString})
+	sendJsonResponse(w, http.StatusOK, returnValue{Token: accessToken})
 
 }
