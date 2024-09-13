@@ -52,7 +52,7 @@ func (cfg *apiConfig) handleGetChirpById(w http.ResponseWriter, r *http.Request)
 
 // handlePostChirps - "POST /api/chirps"
 func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
-	accessToken, err := auth.GetBearerToken(r)
+	accessToken, err := auth.GetAuthorizationBearer(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
@@ -114,7 +114,7 @@ func cleanBody(msg string, badWords map[string]struct{}) string {
 
 // handleDeleteChirps - "DELETE /api/chirps/{chirpID}"
 func (cfg *apiConfig) handleDeleteChirpById(w http.ResponseWriter, r *http.Request) {
-	accessToken, err := auth.GetBearerToken(r)
+	accessToken, err := auth.GetAuthorizationBearer(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return

@@ -18,7 +18,7 @@ func (fdb *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		Email    string `json:"email"`
 	}
 
-	accessToken, err := auth.GetBearerToken(r)
+	accessToken, err := auth.GetAuthorizationBearer(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
@@ -78,6 +78,16 @@ func (fdb *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 
 // handleWebhooks - "POST /api/polka/webhooks"
 func (cfg *apiConfig) handleWebhooks(w http.ResponseWriter, r *http.Request) {
+	polkaAPIKey, err := auth.GetAuthorizationAPIKey(r)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	if polkaAPIKey != cfg.polkaSecret {
+		sendErrorResponse(w, http.StatusUnauthorized, "Err wrong api key")
+		return
+	}
+
 	type userData struct {
 		UserId int `json:"user_id"`
 	}
@@ -87,7 +97,7 @@ func (cfg *apiConfig) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

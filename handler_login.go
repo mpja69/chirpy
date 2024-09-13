@@ -75,7 +75,7 @@ func (fdb *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 // Deletes the refresh token
 // Returns no body, BUT status 204, or 401 if ...
 func (fdb *apiConfig) handleRevokeToken(w http.ResponseWriter, r *http.Request) {
-	refreshTokenString, err := auth.GetBearerToken(r)
+	refreshTokenString, err := auth.GetAuthorizationBearer(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
@@ -93,7 +93,7 @@ func (fdb *apiConfig) handleRevokeToken(w http.ResponseWriter, r *http.Request) 
 //
 //	Returns a new Acces Token, BUT status 401 for invalid token, 200 for success
 func (fdb *apiConfig) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
-	refreshTokenString, err := auth.GetBearerToken(r)
+	refreshTokenString, err := auth.GetAuthorizationBearer(r)
 	if err != nil {
 		sendErrorResponse(w, http.StatusBadRequest, "Err missing auth header - "+err.Error())
 		return

@@ -15,6 +15,7 @@ type apiConfig struct {
 	fileserverHits int
 	db             *database.DB
 	jwtSecret      []byte
+	polkaSecret    string
 }
 
 func main() {
@@ -40,6 +41,7 @@ func main() {
 		fileserverHits: 0,
 		db:             db,
 		jwtSecret:      []byte(os.Getenv("JWT_SECRET")),
+		polkaSecret:    os.Getenv("POLKA_SECRET"),
 	}
 
 	mux := http.NewServeMux()

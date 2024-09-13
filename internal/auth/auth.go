@@ -16,13 +16,25 @@ import (
 var ErrNoAuthHeaderIncluded = errors.New("no auth header included in request")
 var ErrAuthHeaderMalformed = errors.New("auth header is malformed")
 
-func GetBearerToken(request *http.Request) (string, error) {
+func GetAuthorizationBearer(request *http.Request) (string, error) {
 	header := request.Header.Get("Authorization")
 	if header == "" {
 		return "", ErrNoAuthHeaderIncluded
 	}
 	splitHeader := strings.Split(header, " ")
 	if len(splitHeader) != 2 || splitHeader[0] != "Bearer" {
+		return "", ErrAuthHeaderMalformed
+	}
+	return splitHeader[1], nil
+}
+
+func GetAuthorizationAPIKey(request *http.Request) (string, error) {
+	header := request.Header.Get("Authorization")
+	if header == "" {
+		return "", ErrNoAuthHeaderIncluded
+	}
+	splitHeader := strings.Split(header, " ")
+	if len(splitHeader) != 2 || splitHeader[0] != "ApiKey" {
 		return "", ErrAuthHeaderMalformed
 	}
 	return splitHeader[1], nil
