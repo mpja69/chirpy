@@ -1,7 +1,5 @@
 # chirpy
-This is a simple webserver. 
-
-It's an RESTful server that let's the clients simulate sending "chirps", (think "tweets"). 
+This is a simple webserver with a REST API, simulating that clients can register and send so called "chirps", (think "tweets"). 
 
 
 This project was built as part of an assignment on the backend course on Boot.dev.
@@ -48,20 +46,79 @@ Autorization: Bearer <JWT_TOKEN>
 ##### Request body
 ```
 {
-    "body": "Lorem ipsum..."
+    "body": "This is my first tweet, sorry chirp."
 }
 ```
 
 #### GET /api/chirps                 
-Get a list of created chirps
+Get a list of created chirps. Both parameters are optinal. 
+(Default is to get everybodies chirps sorted in descending order.)
 ```
 GET /api/chirps?author_id=<USER_ID>     # Get a list of chirps created by USER_ID
 GET /api/chirps?sort=<asc|desc>         # Get a list of chirps sorted by creation date
 
 ```
+
+##### Response body
+```
+[
+    {
+        "id": 1,
+        "body": "This is my first tweet, sorry chirp."
+        "author_id": 1
+    },
+    {
+        "id": 2,
+        "body": "Hello world!",
+        "author_id": 1
+    }
+]
+```
+
+##### Response status
+If all is OK:
+```
+Code: 200
+Text: OK
+```
+
+If user is given but not found:
+```
+Code: 400
+Text: Bad Request
+```
+
 #### GET /api/chirps/{chirp_id}       
 Get a chirp with ID `{chirp_id}`
 
+##### Response body
+```
+{
+    "id": 2,
+    "body": "Hello world!",
+    "author_id": 1
+}
+```
+
+If all is OK:
+```
+Code: 200
+Text: OK
+```
+
+If the given chirp_id isn't a number:
+```
+Code: 400
+Text: Bad Request
+```
+
+If the given chirp_id doesn't exist:
+```
+Code: 404
+Text: Not Found
+```
+
+##### Response status
 
 #### DELETE /api/chirps/{chirp_id}    
 Delete a chirp with ID `{chirp_id}`
