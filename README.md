@@ -29,15 +29,14 @@ POST /api/users                 # Create a user
 GET /api/users                  # Get a list of users
 GET /api/users/{userId}         # Get a specific user
 POST /api/polka/webhooks        # Used by a payment company, to upgrade a paying customer 
-
+```
 #### Authentication and similar
-``` 
+```
 POST /api/login                 # Let a user login with email + password
 POST /api/refresh               # Refresh a users access token (JWT token)
 POST /api/revoke                # Revoke a users refresh token
 PUT /api/users                  # Edit a users information
 ```
-
 ### Detailed instructions
 #### POST /api/chirps                
 Create a new chirp
