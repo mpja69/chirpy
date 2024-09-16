@@ -99,7 +99,7 @@ Get a chirp with ID `{chirp_id}`
 - If the given chirp_id isn't a number:
     - `400 - Bad Request`
 - If the given chirp_id doesn't exist:
-    - `404 - Text: Not Found`
+    - `404 - Not Found`
 
 ##### Response status
 
