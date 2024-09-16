@@ -76,17 +76,10 @@ GET /api/chirps?sort=<asc|desc>         # Get a list of chirps sorted by creatio
 ```
 
 ##### Response status
-If all is OK:
-```
-Code: 200
-Text: OK
-```
-
-If user is given but not found:
-```
-Code: 400
-Text: Bad Request
-```
+- If all is OK:
+    - `200 - OK`
+- If user is given but not found:
+    - `400 - Bad Request`
 
 #### GET /api/chirps/{chirp_id}       
 Get a chirp with ID `{chirp_id}`
@@ -100,23 +93,13 @@ Get a chirp with ID `{chirp_id}`
 }
 ```
 
-If all is OK:
-```
-Code: 200
-Text: OK
-```
-
-If the given chirp_id isn't a number:
-```
-Code: 400
-Text: Bad Request
-```
-
-If the given chirp_id doesn't exist:
-```
-Code: 404
-Text: Not Found
-```
+##### Response status
+- If all is OK:
+    - `200 - OK`
+- If the given chirp_id isn't a number:
+    - `400 - Bad Request`
+- If the given chirp_id doesn't exist:
+    - `404 - Text: Not Found`
 
 ##### Response status
 
@@ -129,17 +112,10 @@ Autorization: Bearer <JWT_TOKEN>
 ```
 
 ##### Resonse status
-If the chirp is found (has a valid ID) and is successfully deleted
-```
-Code: 204
-Text: No content
-```
-
-If the user isn't authorized
-```
-Code: 403
-Text: Unauthorized
-```
+- If the chirp is found (has a valid ID) and is successfully deleted
+    - `204 - No content`
+- If the user isn't authorized
+    - `403 - Unauthorized`
 
 #### POST /api/users                 
 Create a user.
@@ -206,23 +182,12 @@ Authorization: ApiKey <POLKA_API_KEY>
 }
 ```
 ##### Response Status
-If the user is found
-```
-Code: 204
-Text: No Content
-```
-
-If the user isn't found:
-```
-Code: 404
-Text: Not Found
-```
-
-If the API key doesn't match:
-```
-Code: 401
-Text: Unauthorized
-```
+- If the user is found
+    - `204 - No Content`
+- If the user isn't found
+    - `404 - Not Found`
+- If the API key doesn't match
+    - `401 - Unauthorized`
 
 #### POST /api/login                 
 Let a user login with email + password
@@ -269,17 +234,10 @@ Authorization: Bearer <REFRESH_TOKEN>
 
 ##### Response status
 
-If the the token is revoed successfully
-```
-Code: 204
-Text: No Content
-```
-
-If the is token in the request:
-```
-Code: 403
-Text: Unauthorized
-```
+- If the the token is revoed successfully
+    - `204 - No Content`
+- If the is token in the request:
+    - `403 - Unauthorized`
 
 #### PUT /api/users                  
 Edit a users information
