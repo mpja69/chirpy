@@ -190,8 +190,39 @@ Let a user login with email + password
 #### POST /api/refresh               
 Refresh a users access token (JWT token)
 
+##### Request header
+```
+Authorization: Bearer <REFRESH_TOKEN>
+```
+
+##### Response body
+```
+{
+    "token": <JWT_TOKEN>
+}
+```
+
 #### POST /api/revoke                
 Revoke a users refresh token
+
+##### Request header
+```
+Authorization: Bearer <REFRESH_TOKEN>
+```
+
+##### Response status
+
+If the the token is revoed successfully
+```
+Code: 204
+Text: No Content
+```
+
+If the is token in the request:
+```
+Code: 403
+Text: Unauthorized
+```
 
 #### PUT /api/users                  
 Edit a users information
@@ -205,5 +236,7 @@ Edit a users information
 ```
 ##### Header
 ```
-Authorization: <JWT_TOKEN>
+Authorization: Bearer <JWT_TOKEN>
+```
+
 
