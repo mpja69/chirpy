@@ -29,18 +29,28 @@ POST /api/users                 # Create a user
 GET /api/users                  # Get a list of users
 GET /api/users/{userId}         # Get a specific user
 POST /api/polka/webhooks        # Used by a payment company, to upgrade a paying customer 
+PUT /api/users                  # Edit a users information
 ```
-#### Authentication and similar
+#### Authentication and authorization
 ```
 POST /api/login                 # Let a user login with email + password
 POST /api/refresh               # Refresh a users access token (JWT token)
 POST /api/revoke                # Revoke a users refresh token
-PUT /api/users                  # Edit a users information
 ```
 ### Detailed instructions
 #### POST /api/chirps                
 Create a new chirp
 
+##### Request header
+```
+Autorization: Bearer <JWT_TOKEN>
+```
+##### Request body
+```
+{
+    "body": "Lorem ipsum..."
+}
+```
 
 #### GET /api/chirps                 
 Get a list of created chirps
@@ -56,17 +66,35 @@ Get a chirp with ID `{chirp_id}`
 #### DELETE /api/chirps/{chirp_id}    
 Delete a chirp with ID `{chirp_id}`
 
+##### Request header
+```
+Autorization: Bearer <JWT_TOKEN>
+```
+
+##### Resonse status
+If the chirp is found (has a valid ID) and is successfully deleted
+```
+Code: 204
+Text: No content
+```
+
+If the user isn't authorized
+```
+Code: 403
+Text: Unauthorized
+```
+
 #### POST /api/users                 
 Create a user.
 
-Request body:
+##### Request body:
 ```
 {
     "password":
     "email": 
 }
 ```
-Response body:
+##### Response body:
 ```
 {
     "id":
@@ -77,27 +105,83 @@ Response body:
 #### GET /api/users                  
 Get a list of users
 
-#### GET /api/users/{userId}         
-Get a specific user
+##### Response
+```
+[
+    {
+        "id": 1,
+        "email": "name@example.com",
+        "is_chirpy_red": false
+    },
+    {
+        "id": 2,
+        "email": "name2@example.com",
+        "is_chirpy_red": true
+    }
+]
+```
 
+#### GET /api/users/{userId}         
+Get a user 1: `GET /api/users/1`
+
+##### Response
+```
+
+{
+    "id": 1,
+    "email": "name@example.com",
+    "is_chirpy_red": false
+}
+```
 #### POST /api/polka/webhooks        
 Used by a payment company, to upgrade a paying customer 
+##### Header
+```
+Authorization: ApiKey <POLKA_API_KEY>
+```
+##### Request
+```
+{
+    "event": "user.upgraded",
+    "data": {
+        "user_id": 1
+    }
+}
+```
+##### Response Status
+If the user is found
+```
+Code: 204
+Text: No Content
+```
+
+If the user isn't found:
+```
+Code: 404
+Text: Not Found
+```
+
+If the API key doesn't match:
+```
+Code: 401
+Text: Unauthorized
+```
 
 #### POST /api/login                 
 Let a user login with email + password
 
-Request body:
+##### Request
 ```
 {
-    "password":
-    "email": 
+    "password": "abc123"
+    "email": "name@example.com"
 }
 ```
-Response body:
+##### Response
 ```
 {
-    "id":
-    "email": 
+    "id": 1
+    "email": "name@example.com" 
     "token": <JWT_TOKEN>
     "refresh_token": <REFRESH_TOKEN>
 }
@@ -112,14 +196,14 @@ Revoke a users refresh token
 #### PUT /api/users                  
 Edit a users information
 
-Request body:
+##### Request
 ```
 {
     "password":
     "email": 
 }
 ```
-Header:
+##### Header
 ```
 Authorization: <JWT_TOKEN>
 

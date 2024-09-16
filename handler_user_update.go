@@ -87,7 +87,6 @@ func (cfg *apiConfig) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(w, http.StatusUnauthorized, "Err wrong api key")
 		return
 	}
-
 	type userData struct {
 		UserId int `json:"user_id"`
 	}
